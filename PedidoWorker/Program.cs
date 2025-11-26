@@ -1,16 +1,25 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using PedidoWorker;
-using Shared.Data;
-using System;
+using PedidoWorker.Interfaces;
+using PedidoWorker.Services;
 
-var builder = Host.CreateApplicationBuilder(args);
+IHost host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((hostContext, services) =>
+    {
+        // Registrar processor e consumer
+        services.AddSingleton<IPedidoProcessor, PedidoProcessor>();
+        services.AddSingleton<IRabbitMqConsumer, RabbitMqPedidoConsumer>();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PedidosDb")));
+        // Registrar host service
+        services.AddHostedService<Worker>();
+    })
+    .ConfigureLogging(logging =>
+    {
+        logging.ClearProviders();
+        logging.AddConsole();
+    })
+    .Build();
 
-builder.Services.AddHostedService<Worker>();
-
-var app = builder.Build();
-app.Run();
+await host.RunAsync();
