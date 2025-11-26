@@ -1,48 +1,59 @@
-# PedidosAPI
+# 📘 PedidosAPI
 
-API desenvolvida como desafio técnico, utilizando **.NET**, **RabbitMQ**, **PostgreSQL** e **Docker**.  
-O objetivo é demonstrar o fluxo completo de criação e processamento assíncrono de pedidos utilizando filas.
+![.NET Build](https://github.com/iuri-z/PedidosAPI/actions/workflows/dotnet.yml/badge.svg)
+
+API desenvolvida como desafio técnico, utilizando **.NET 8**, **RabbitMQ**, **PostgreSQL**, **Docker** e um **Worker Service** para processamento assíncrono.
+
+O objetivo é demonstrar um fluxo completo de comunicação via fila, com publicação de mensagens pela API e consumo pelo Worker.
 
 ---
 
-## 📌 Objetivo do Projeto
+# 🔍 Índice
+- [Objetivo](#-objetivo-do-projeto)  
+- [Arquitetura](#-arquitetura-geral)  
+- [Como executar](#-como-executar-o-projeto)  
+- [Como testar](#-como-testar-o-projeto)  
+- [Endpoints](#-endpoints)  
+- [Fluxo completo](#-fluxo-completo-do-pedido)  
+- [Estrutura do projeto](#-estrutura-do-projeto)  
+- [Tecnologias](#-tecnologias-utilizadas)  
+
+---
+
+# 📌 Objetivo do Projeto
 
 Implementar uma API capaz de:
 
-1. Criar pedidos.
-2. Listar pedidos existentes.
-3. Publicar mensagens em uma fila RabbitMQ quando um novo pedido é criado.
-4. Processar pedidos em um **Worker**, que consome a fila e altera o status de cada pedido para `processado` após a leitura.
+1. Criar pedidos.  
+2. Listar pedidos existentes.  
+3. Publicar mensagens no RabbitMQ ao criar um pedido.  
+4. Consumir mensagens em um **Worker**, atualizando o status do pedido para `processado`.  
+5. Orquestrar todo o ambiente via Docker.
 
 ---
 
-## 🏗 Arquitetura Geral
+# 🏗 Arquitetura Geral
 
-A solução é composta pelos seguintes serviços:
+A solução contém 4 serviços:
 
-- **PedidosAPI**  
-  API responsável pelos endpoints e pela publicação das mensagens no RabbitMQ.
-
-- **PedidoWorker**  
-  Worker Service que consome mensagens, simula o processamento e atualiza pedidos no banco.
-
-- **PostgreSQL**  
-  Banco de dados utilizado pela API e pelo Worker.
-
+- **PedidosAPI** — API REST com endpoints para criação e consulta.  
+- **PedidoWorker** — serviço que processa pedidos consumindo mensagens da fila.  
 - **RabbitMQ (com painel de administração)**  
-  Sistema de mensageria usado para comunicação assíncrona.
+- **PostgreSQL**
 
-Toda a estrutura é orquestrada via Docker Compose.
+A API aplica automaticamente as migrations ao subir, garantindo que o banco esteja pronto sem comandos adicionais.
 
 ---
 
-## 🐳 Como executar o projeto
+# 🐳 Como executar o projeto
 
-### Pré-requisitos
+## ✔ Pré-requisitos
 - Docker  
 - Docker Compose  
+- Portas **5068**, **5432** e **15672** livres
 
-### Subir todos os serviços
+## ✔ Clonar o repositório
 
 ```bash
-docker-compose up --build
+git clone https://github.com/iuri-z/PedidosAPI.git
+cd PedidosAPI
