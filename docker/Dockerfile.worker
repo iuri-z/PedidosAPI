@@ -1,0 +1,21 @@
+# Build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+WORKDIR /src
+
+COPY PedidoWorker/PedidoWorker.csproj PedidoWorker/
+COPY Shared/Shared.csproj Shared/
+
+RUN dotnet restore PedidoWorker/PedidoWorker.csproj
+
+COPY . .
+
+RUN dotnet publish PedidoWorker/PedidoWorker.csproj -c Release -o /app
+
+# Runtime
+FROM mcr.microsoft.com/dotnet/runtime:10.0 AS final
+
+WORKDIR /app
+COPY --from=build /app .
+
+ENTRYPOINT ["dotnet", "PedidoWorker.dll"]

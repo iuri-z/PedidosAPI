@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="../PedidoWorker/PedidoWorker.csproj" />
+  <Project Path="../Shared/Shared.csproj" />
+  <Project Path="PedidoApi.csproj" />
+</Solution>

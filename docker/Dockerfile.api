@@ -1,0 +1,23 @@
+# Build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+WORKDIR /src
+
+# Copia todos os csproj primeiro (boa prática)
+COPY PedidoApi/PedidoApi.csproj PedidoApi/
+COPY Shared/Shared.csproj Shared/
+
+RUN dotnet restore PedidoApi/PedidoApi.csproj
+
+# Copia tudo agora
+COPY . .
+
+RUN dotnet publish PedidoApi/PedidoApi.csproj -c Release -o /app
+
+# Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+
+WORKDIR /app
+COPY --from=build /app .
+
+ENTRYPOINT ["dotnet", "PedidoApi.dll"]
