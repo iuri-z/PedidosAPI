@@ -36,7 +36,7 @@ namespace PedidoApi.Controllers
                 _context.Pedidos.Add(pedido);
                 await _context.SaveChangesAsync();
 
-                await _rabbit.PublishAsync("pedidos_queue", $"Novo pedido criado: {pedido.Id}");
+                await _rabbit.PublishAsync("pedidos_queue", pedido.Id.ToString());
 
                 return Ok(pedido);
             }
@@ -52,6 +52,16 @@ namespace PedidoApi.Controllers
         {
             var pedidos = await _context.Pedidos.ToListAsync();
             return Ok(pedidos);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> ObterPorId(Guid id)
+        {
+            var pedido = await _context.Pedidos.FindAsync(id);
+            if (pedido == null)
+                return NotFound();
+
+            return Ok(pedido);
         }
 
     }
