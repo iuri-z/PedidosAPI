@@ -5,6 +5,7 @@ WORKDIR /src
 
 COPY PedidoWorker/PedidoWorker.csproj PedidoWorker/
 COPY Shared/Shared.csproj Shared/
+COPY PedidoWorker/appsettings.json /app/appsettings.json
 
 RUN dotnet restore PedidoWorker/PedidoWorker.csproj
 

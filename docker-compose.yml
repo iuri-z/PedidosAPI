@@ -20,6 +20,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_started
+    environment:
+      - ConnectionStrings__PedidosDb=Host=postgres;Port=5432;Database=pedidosdb;Username=postgres;Password=postgres
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -27,7 +29,7 @@ services:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
     ports:
       - "5672:5672"
       - "15672:15672"

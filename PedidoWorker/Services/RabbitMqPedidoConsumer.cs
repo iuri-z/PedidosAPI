@@ -35,31 +35,69 @@ namespace PedidoWorker.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _connection = await _factory.CreateConnectionAsync();
-            _channel = await _connection.CreateChannelAsync();
+            await ConectarRabbitMqComRetry(cancellationToken);
 
-            await _channel.QueueDeclareAsync(queue: QueueName, durable: false, exclusive: false, autoDelete: false);
+            await _channel.QueueDeclareAsync(
+                queue: QueueName,
+                durable: false,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
 
             consumer.ReceivedAsync += async (model, ea) =>
             {
-                var texto = Encoding.UTF8.GetString(ea.Body.ToArray());
+                var mensagem = Encoding.UTF8.GetString(ea.Body.ToArray());
 
-                if (!Guid.TryParse(texto, out var pedidoId))
+                if (!Guid.TryParse(mensagem, out var pedidoId))
                 {
-                    _logger.LogWarning("Mensagem inválida: {Mensagem}", texto);
+                    _logger.LogWarning("Mensagem inválida recebida: {Mensagem}", mensagem);
                     return;
                 }
 
                 await _processor.ProcessarAsync(pedidoId);
             };
 
-            await _channel.BasicConsumeAsync(queue: QueueName, autoAck: true, consumer: consumer);
+            await _channel.BasicConsumeAsync(
+                queue: QueueName,
+                autoAck: true,
+                consumer: consumer);
 
             _logger.LogInformation("Worker escutando fila...");
 
             await Task.Delay(Timeout.Infinite, cancellationToken);
+        }
+
+        private async Task ConectarRabbitMqComRetry(CancellationToken cancellationToken)
+        {
+            var tentativas = 10;
+            var atraso = TimeSpan.FromSeconds(3);
+
+            for (int i = 1; i <= tentativas; i++)
+            {
+                try
+                {
+                    _connection = await _factory.CreateConnectionAsync();
+                    _channel = await _connection.CreateChannelAsync();
+
+                    _logger.LogInformation("Conectado ao RabbitMQ na tentativa {Tentativa}.", i);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Falha ao conectar no RabbitMQ (tentativa {Tentativa}/{Total}).",
+                        i,
+                        tentativas);
+
+                    if (i == tentativas)
+                        throw;
+
+                    await Task.Delay(atraso, cancellationToken);
+                }
+            }
         }
     }
 }
